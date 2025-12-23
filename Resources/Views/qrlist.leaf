@@ -1,0 +1,41 @@
+#extend("layouts/base"):
+#export("body"):
+<section class="section">
+    <div class="container">
+        <h1 class="title">
+            <i class="fa-solid fa-qrcode"></i> #(title)
+        </h1>
+
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>QR Code</th>
+                    <th>Target URL</th>
+                    <th>Dynamic URL</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                #for(qr in qrs):
+                <tr>
+                    <td>#(qr.id)</td>
+                    <td>
+                        #if(qr.hasQR):
+                            <img src="data:image/png;base64,#(qr.qrBase64)" alt="QR Code">
+                        #endif
+                    </td>
+
+                    <td>#(qr.targetURL)</td>
+                    <td>#(qr.dynamicURL)</td>
+                    <td>
+                        <a href="/qr/#(qr.id)/edit">Modifica</a>
+                    </td>
+                </tr>
+                #endfor
+            </tbody>
+        </table>
+    </div>
+</section>
+#endexport
+#endextend

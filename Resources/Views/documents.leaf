@@ -1,0 +1,30 @@
+#extend("layouts/base"):
+    #export("body"):
+        <section class="section">
+            <div class="container">
+                <h1 class="title title-with-icon">
+                <i class="fa-solid fa-qrcode"></i>
+                #(someHomeSpecificData.title)</h1>
+                <div class="columns is-multiline">
+                    #for(doc in someHomeSpecificData.documenti):
+                        <div class="column is-one-third">
+                            <div class="card square-card">
+                                <div class="card-image">
+                                    <figure class="image">
+                                        <!-- Puoi usare doc.title nell'immagine se vuoi -->
+                                        <img src="https://placehold.co/600x400?text=#(doc.title)" alt="Documento #(doc.title)">
+                                    </figure>
+                                </div>
+                                <div class="card-content">
+                                    <p class="title is-6 mb-2">#(doc.title)</p>
+                                    <p class="content is-size-7">#(doc.description)</p>
+                                </div>
+                            </div>
+                        </div>
+                    #endfor
+                </div>
+            </div>
+        </section>
+    #endexport
+#endextend
+

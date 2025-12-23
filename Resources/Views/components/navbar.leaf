@@ -1,0 +1,45 @@
+<nav class="navbar is-light has-shadow is-fixed-top" role="navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item logo-item" href="/">
+            <img src="/images/QrCoder_logo.svg" alt="QR-Coder logo" class="navbar-logo">
+            <span class="logo-text">QR-Coder</span>
+        </a>
+
+
+
+        <a role="button" class="navbar-burger" data-target="mainNavbar">
+            <span></span><span></span><span></span>
+        </a>
+    </div>
+
+    <div id="mainNavbar" class="navbar-menu">
+        <div class="navbar-start">
+            <a class="navbar-item" href="/">Home</a>
+            <a class="navbar-item" href="/documents">Documents</a>
+            <a class="navbar-item" href="qr/">Lista Qr-code</a>
+            <a class="navbar-item" href="qr/new">Crea Qr-code</a>
+            <a class="navbar-item" href="/signup">Sign up</a>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <a class="button is-primary">
+                    Sign in
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const burger = document.querySelector('.navbar-burger');
+  const menu = document.getElementById('mainNavbar');
+
+  burger.addEventListener('click', () => {
+    burger.classList.toggle('is-active');
+    menu.classList.toggle('is-active');
+  });
+});
+</script>

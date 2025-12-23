@@ -1,0 +1,25 @@
+#extend("layouts/base"):
+#export("body"):
+<section class="section">
+    <div class="container">
+        <h1 class="title">Modifica QR Code</h1>
+
+        <form action="/qr/#(id)/edit" method="POST">
+            <div class="field">
+                <label class="label">URL di destinazione</label>
+                <div class="control">
+                    <input class="input" type="text" name="url" value="#(targetURL)" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Salva Modifica</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+#endexport
+#endextend
+

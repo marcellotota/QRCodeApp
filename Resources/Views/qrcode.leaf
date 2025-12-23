@@ -1,0 +1,19 @@
+#extend("layouts/base"):
+    #export("body"):
+    <h1>QR Code dinamico</h1>
+
+    <img src="data:image/png;base64,#(qrBase64)" />
+
+    <p>
+        URL dinamico:<br>
+        <a href="#(dynamicURL)">#(dynamicURL)</a>
+    </p>
+
+    <p>
+        Redirect verso:<br>
+        #(targetURL)
+    </p>
+</body>
+</html>
+    #endexport
+#endextend

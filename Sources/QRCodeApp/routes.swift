@@ -2,13 +2,15 @@ import Fluent
 import Vapor
 
 func routes(_ app: Application) throws {
-    app.get { req async throws in
-        try await req.view.render("index", ["title": "Hello Vapor!"])
-    }
+    
+    // Route ping pulita, senza Leaf o redirect
+        app.get("ping") { req -> String in
+            return "PONG 🚀"
+        }
 
-    app.get("hello") { req async -> String in
-        "Hello, world!"
-    }
-
-    try app.register(collection: TodoController())
+    // Qui registri i tuoi controller
+    try app.register(collection: HomeController())
+    try app.register(collection: DocumentsController())
+    try app.register(collection: SignupController())
+    try app.register(collection: QRController())
 }

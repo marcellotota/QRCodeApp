@@ -1,0 +1,14 @@
+#extend("layouts/base"):
+    #export("body"):
+        <section class="hero is-fullheight-with-navbar has-background-light">
+            <div class="hero-body">
+                <div class="container has-text-centered">
+                    <h1 class="title"><i class="fa-solid fa-house"></i>#(someHomeSpecificData.title)</h1>
+                    <br>
+                    <p class="subtitle">Bulma + Vapor Leaf</p>
+                    <p class="subtitle">#(someHomeSpecificData.subtitle)</p>
+                </div>
+            </div>
+        </section>
+    #endexport
+#endextend
