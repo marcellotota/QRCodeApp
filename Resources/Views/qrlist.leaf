@@ -22,14 +22,22 @@
                     <td>#(qr.id)</td>
                     <td>
                         #if(qr.hasQR):
-                            <img src="data:image/png;base64,#(qr.qrBase64)" alt="QR Code">
+                            <img src="data:image/svg+xml;base64,#(qr.qrBase64)" alt="QR Code" style="max-width: 150px;">
                         #endif
                     </td>
 
                     <td>#(qr.targetURL)</td>
                     <td>#(qr.dynamicURL)</td>
                     <td>
-                        <a href="/qr/#(qr.id)/edit">Modifica</a>
+                        <a href="/qr/#(qr.id)/edit" title="Modifica">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        &nbsp;&nbsp;
+                        <form action="/qr/#(qr.id)/delete" method="POST" style="display:inline;">
+                            <button type="submit" class="button is-small" style="background:none; border:none; padding:0;" title="Elimina">
+                                <i class="fa-solid fa-trash has-text-danger"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 #endfor

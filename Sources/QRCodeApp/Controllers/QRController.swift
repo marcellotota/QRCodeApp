@@ -5,11 +5,10 @@
 //  Created by Tota Marcello on 22/12/25.
 //
 
-
 import Vapor
 import Fluent
-import EFQRCode
 import Leaf
+import QRCodeGenerator
 
 struct QRController: RouteCollection {
 
@@ -26,6 +25,10 @@ struct QRController: RouteCollection {
         // ✏️ MODIFICA
         qr.get(":id", "edit", use: editForm)
         qr.post(":id", "edit", use: update)
+        
+        
+        // 🚫 CANCELLA
+        qr.post(":id", "delete", use: delete)
 
         // 🔁 REDIRECT DINAMICO
         qr.get(":id", use: redirect)
@@ -42,82 +45,67 @@ struct QRController: RouteCollection {
 
         let leafQrs: [QRLeaf] = qrs.map { qr in
             let dynamicURL = "\(host):\(port)/qr/\(qr.id!.uuidString)"
-            let base64QR: String
-            if let cgImage = EFQRCode.generate(
-                for: dynamicURL,
-                size: EFIntSize(width: 150, height: 150)
-            ), let pngData = pngData(from: cgImage) {
-                base64QR = pngData.base64EncodedString()
-            } else {
-                base64QR = ""
+            let svg: String
+
+            do {
+                let qrCode = try QRCodeGenerator.QRCode.encode(
+                    text: dynamicURL,
+                    ecl: QRCodeECC.medium
+                )
+                svg = qrCode.toSVGString(border: 4)
+            } catch {
+                print("❌ Errore generazione QR:", error)
+                svg = ""
             }
 
             return QRLeaf(
-                    id: qr.id!.uuidString,
-                    targetURL: qr.targetURL,
-                    dynamicURL: dynamicURL,
-                    qrBase64: base64QR,
-                    hasQR: !base64QR.isEmpty  // impostiamo un booleano
-                )
+                id: qr.id!.uuidString,
+                targetURL: qr.targetURL,
+                dynamicURL: dynamicURL,
+                qrBase64: Data(svg.utf8).base64EncodedString(), // <- rinominato
+                hasQR: !svg.isEmpty
+            )
+
         }
 
-        let context = QRListContext(title: "QR Codes", qrs: leafQrs)
+        let context = QRListContext(title: "QR Codes", qrs: leafQrs, errorMessage: "")
         return try await req.view.render("qrlist", context)
     }
 
-
-
-
     // MARK: - FORM CREAZIONE
     func showForm(req: Request) throws -> EventLoopFuture<View> {
-        return req.view.render("create_qr", [
-            "title": "Crea QR Code"
-        ])
+        req.view.render("create_qr", ["title": "Crea QR Code"])
     }
 
     // MARK: - CREA QR + RENDER
-    func createLeaf(req: Request) throws -> EventLoopFuture<View> {
-
+    func createLeaf(req: Request) async throws -> View {
         guard let targetURL = req.query[String.self, at: "url"] else {
             throw Abort(.badRequest, reason: "Parametro 'url' mancante")
         }
 
-        let qrCode = QRCode(targetURL: targetURL)
+        let qrCodeModel = QRCode(targetURL: targetURL)
+        try await qrCodeModel.save(on: req.db)
 
-        return qrCode.save(on: req.db)
-            .flatMapErrorThrowing { error in
-                print("💥 DB Error: \(String(reflecting: error))")
-                throw Abort(.internalServerError, reason: "Database error")
-            }
-            .flatMap { _ in
-                guard let id = qrCode.id else {
-                    return req.eventLoop.future(error: Abort(.internalServerError))
-                }
+        guard let id = qrCodeModel.id else {
+            throw Abort(.internalServerError)
+        }
 
-                let host = req.application.http.server.configuration.hostname
-                let port = req.application.http.server.configuration.port
-                let dynamicURL = "\(host):\(port)/qr/\(id)"
+        let host = req.application.http.server.configuration.hostname
+        let port = req.application.http.server.configuration.port
+        let dynamicURL = "\(host):\(port)/qr/\(id)"
 
-                guard let cgImage = EFQRCode.generate(
-                    for: dynamicURL,
-                    size: EFIntSize(width: 300, height: 300)
-                ) else {
-                    return req.eventLoop.future(error: Abort(.internalServerError))
-                }
+        // genera SVG QR compatibile Linux
+        let qrCode = try QRCodeGenerator.QRCode.encode(
+            text: dynamicURL,
+            ecl: QRCodeECC.medium)
+        let svg = qrCode.toSVGString(border: 4)
 
-                guard let pngData = pngData(from: cgImage) else {
-                    return req.eventLoop.future(error: Abort(.internalServerError))
-                }
-
-                let base64QR = pngData.base64EncodedString()
-
-                return req.view.render("create_qr", [
-                    "title": "Crea QR Code",
-                    "qrBase64": base64QR,
-                    "targetURL": targetURL,
-                    "dynamicURL": dynamicURL
-                ])
-            }
+        return try await req.view.render("create_qr", [
+            "title": "Crea QR Code",
+            "qrBase64": Data(svg.utf8).base64EncodedString(), // Base64 SVG
+            "targetURL": targetURL,
+            "dynamicURL": dynamicURL
+        ])
     }
 
     // MARK: - FORM MODIFICA
@@ -139,12 +127,10 @@ struct QRController: RouteCollection {
 
     // MARK: - SALVA MODIFICA
     func update(req: Request) throws -> EventLoopFuture<Response> {
-        // 1️⃣ Prendi l'ID dai parametri
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Parametro 'id' mancante")
         }
 
-        // 2️⃣ Prendi il nuovo URL dal body
         let newURL: String
         do {
             newURL = try req.content.get(String.self, at: "url")
@@ -152,7 +138,6 @@ struct QRController: RouteCollection {
             throw Abort(.badRequest, reason: "Parametro 'url' mancante")
         }
 
-        // 3️⃣ Trova il QR nel DB e aggiorna
         return QRCode.find(id, on: req.db)
             .unwrap(or: Abort(.notFound, reason: "QR Code non trovato"))
             .flatMap { qr in
@@ -163,10 +148,8 @@ struct QRController: RouteCollection {
             }
     }
 
-
     // MARK: - REDIRECT + TRACKING
     func redirect(req: Request) throws -> EventLoopFuture<Response> {
-
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest)
         }
@@ -179,14 +162,80 @@ struct QRController: RouteCollection {
                     ipAddress: req.remoteAddress?.ipAddress ?? "unknown",
                     userAgent: req.headers.first(name: .userAgent) ?? "unknown"
                 )
-
                 return scan.save(on: req.db).map {
                     req.redirect(to: qr.targetURL)
                 }
             }
     }
-}
+    
+    // MARK: - ELIMINA QR
+    func delete(req: Request) async throws -> View {
+        guard let id = req.parameters.get("id", as: UUID.self),
+              let qr = try await QRCode.find(id, on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        let host = req.application.http.server.configuration.hostname
+        let port = req.application.http.server.configuration.port
 
+
+        do {
+            // elimina le scansioni collegate
+            try await Scan.query(on: req.db)
+                .filter(\.$qrCode.$id == qr.id!) // Assicurati che la relazione sia corretta
+                .delete()
+
+            // elimina il QR
+            try await qr.delete(on: req.db)
+
+        } catch {
+            let qrs = try await QRCode.query(on: req.db)
+                .sort(\.$createdAt, .descending)
+                .all()
+
+            let host = req.application.http.server.configuration.hostname
+            let port = req.application.http.server.configuration.port
+
+            let leafQrs: [QRLeaf] = qrs.map { qr in
+                let dynamicURL = "\(host):\(port)/qr/\(qr.id!.uuidString)"
+                return QRLeaf(
+                    id: qr.id!.uuidString,
+                    targetURL: qr.targetURL,
+                    dynamicURL: dynamicURL,
+                    qrBase64: "",
+                    hasQR: false
+                )
+            }
+
+            let context = QRListContext(title: "QR Codes", qrs: leafQrs, errorMessage: String(describing: error))
+            return try await req.view.render("qrlist", context)
+        }
+
+        // ricarica la lista aggiornata senza errori
+        let qrs = try await QRCode.query(on: req.db)
+            .sort(\.$createdAt, .descending)
+            .all()
+
+        let leafQrs: [QRLeaf] = qrs.map { qr in
+            let dynamicURL = "\(host):\(port)/qr/\(qr.id!.uuidString)"
+            return QRLeaf(
+                id: qr.id!.uuidString,
+                targetURL: qr.targetURL,
+                dynamicURL: dynamicURL,
+                qrBase64: "",
+                hasQR: false
+            )
+        }
+
+        let context = QRListContext(title: "QR Codes", qrs: leafQrs, errorMessage: nil)
+        return try await req.view.render("qrlist", context)
+    }
+
+
+
+
+
+}
 
 
 struct QRLeaf: Encodable {
@@ -197,7 +246,10 @@ struct QRLeaf: Encodable {
     let hasQR: Bool
 }
 
+
 struct QRListContext: Encodable {
     let title: String
     let qrs: [QRLeaf]
+    let errorMessage: String?  // <- nuovo
 }
+

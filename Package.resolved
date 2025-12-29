@@ -1,5 +1,5 @@
 {
-  "originHash" : "4a639064701c581ed1e2b4e98ab15ef7be0608daa0c93793662760d47c40f25a",
+  "originHash" : "a82db1c6aaeedfbacddf01daee6eb795191078e8468dae59cfc834888d34f094",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -26,15 +26,6 @@
       "state" : {
         "revision" : "742f624a998cba2a9e653d9b1e91ad3f3a5dff6b",
         "version" : "4.15.2"
-      }
-    },
-    {
-      "identity" : "efqrcode",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/EFPrefix/EFQRCode.git",
-      "state" : {
-        "revision" : "3a6c5012f1a0df404a92e55bb01b4b685ff5a2d1",
-        "version" : "6.2.2"
       }
     },
     {
@@ -105,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/postgres-nio.git",
       "state" : {
-        "revision" : "4795a0b0762c5cca843a720969c9dfee378e5120",
-        "version" : "1.29.0"
+        "revision" : "d578b86fb2c8321b114d97cd70831d1a3e9531a6",
+        "version" : "1.30.1"
       }
     },
     {
@@ -290,6 +281,15 @@
       }
     },
     {
+      "identity" : "swift-qrcode-generator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/fwcd/swift-qrcode-generator.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "61fe7fc530cafc90a8cd6291e968520d9f7ad687"
+      }
+    },
+    {
       "identity" : "swift-service-context",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-service-context.git",
@@ -317,12 +317,12 @@
       }
     },
     {
-      "identity" : "swift_qrcodejs",
+      "identity" : "swiftgd",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/EFPrefix/swift_qrcodejs.git",
+      "location" : "https://github.com/twostraws/SwiftGD.git",
       "state" : {
-        "revision" : "d1605333f7edac39b4518538ef4f2638fdd2e4d6",
-        "version" : "2.3.1"
+        "revision" : "1960998971b453101e740f25bc6d9fb01e0ba225",
+        "version" : "2.5.0"
       }
     },
     {

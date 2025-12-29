@@ -12,27 +12,22 @@ import Vapor
 final class QRCode: Model, Content {
     static let schema = "qrcodes"
 
-    // ❌ non forzare immutabilità
     @ID(key: .id)
     var id: UUID?
 
     @Field(key: "target_url")
     var targetURL: String
 
-    @Field(key: "created_at")
-    var createdAt: Date
-
-    @Children(for: \.$qrCode)
-    var scans: [Scan]
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?
 
     init() {}
 
-    init(id: UUID? = nil, targetURL: String, createdAt: Date = Date()) {
-        self.id = id
+    init(targetURL: String) {
         self.targetURL = targetURL
-        self.createdAt = createdAt
     }
 }
+
 
 // Disabilitiamo l’inferenza Sendable
 extension QRCode: @unchecked Sendable {}
