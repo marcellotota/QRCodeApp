@@ -12,8 +12,9 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         libjpeg-dev \
         libfreetype6-dev \
         pkg-config \
-    && [ -f /usr/include/gd.h ] || ln -s /usr/include/gd2/gd.h /usr/include/gd.h
+    && [ -f /usr/include/gd.h ] || ln -s /usr/include/gd2/gd.h /usr/include/gd.h \
     && rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /build
 
