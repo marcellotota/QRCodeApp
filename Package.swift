@@ -18,9 +18,7 @@ let package = Package(
         // 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
         // Generatore di QR-Code
-        .package(url: "https://github.com/fwcd/swift-qrcode-generator.git", branch: "main"),
-        .package(url: "https://github.com/twostraws/SwiftGD.git", from: "2.5.0")
-
+        .package(url: "https://github.com/fwcd/swift-qrcode-generator.git", branch: "main")
     ],
     targets: [
         .executableTarget(
@@ -32,8 +30,7 @@ let package = Package(
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "QRCodeGenerator", package: "swift-qrcode-generator"),
-                .product(name: "SwiftGD", package: "SwiftGD")
+                .product(name: "QRCodeGenerator", package: "swift-qrcode-generator")
             ],
             swiftSettings: swiftSettings
         ),
