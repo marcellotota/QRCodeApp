@@ -2,37 +2,51 @@
 # Build image
 # ================================
 FROM swift:6.1-noble AS build
-# Usa immagine ufficiale Swift
 
 # Directory di lavoro
 WORKDIR /app
 
 # Copia solo i manifest per sfruttare la cache delle dipendenze
-COPY Package*.swift ./
+COPY Package.swift Package.resolved ./
 
-# Monta la cache di Render per le dipendenze Swift
+# Cache SwiftPM (Render)
 RUN --mount=type=cache,target=/root/.swiftpm \
     --mount=type=cache,target=/root/.build \
-    rm -rf .build/ Package.resolved && \
     swift package resolve
 
-# Copia il resto dei sorgenti
+# Copia sorgenti, risorse e test
 COPY Sources ./Sources
 COPY Resources ./Resources
 COPY Tests ./Tests
 
-
-# Build con cache
+# Build release (❌ niente static-swift-stdlib)
 RUN --mount=type=cache,target=/root/.swiftpm \
     --mount=type=cache,target=/root/.build \
-    swift build -c release --product QRCodeApp --static-swift-stdlib
+    swift build -c release --product QRCodeApp
 
-# Copia il binario e le risorse in /staging
-RUN mkdir -p /staging
-RUN cp "$(swift build -c release --show-bin-path)/QRCodeApp" /staging
-RUN find -L "$(swift build -c release --show-bin-path)" -regex '.*\.resources$' -exec cp -Ra {} /staging \;
+# ================================
+# Runtime image
+# ================================
+FROM ubuntu:24.04
 
-# Entry point
-WORKDIR /staging
-ENTRYPOINT ["./QRCodeApp"]
+WORKDIR /app
 
+# Dipendenze runtime minime
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libssl3 \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia binario
+COPY --from=build /app/.build/release/QRCodeApp ./QRCodeApp
+
+# 🔥 COPIA ESPLICITA DELLE RISORSE (VIEWS LEAF)
+COPY --from=build /app/Resources ./Resources
+
+# Render fornisce PORT
+ENV PORT=8080
+
+EXPOSE 8080
+
+CMD ["./QRCodeApp"]

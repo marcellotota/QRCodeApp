@@ -31,6 +31,8 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(CreateScan())
 
     app.views.use(.leaf)
+    app.directory.resourcesDirectory = "Resources/"
+
 
     try routes(app)
 }
