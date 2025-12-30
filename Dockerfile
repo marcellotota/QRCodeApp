@@ -19,6 +19,8 @@ RUN --mount=type=cache,target=/root/.swiftpm \
 # Copia il resto dei sorgenti
 COPY Sources ./Sources
 COPY Resources ./Resources
+COPY Tests ./Tests
+
 
 # Build con cache
 RUN --mount=type=cache,target=/root/.swiftpm \
