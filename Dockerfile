@@ -3,50 +3,40 @@
 # ================================
 FROM swift:6.1-noble AS build
 
-# Directory di lavoro
 WORKDIR /app
 
-# Copia solo i manifest per sfruttare la cache delle dipendenze
+# Manifest
 COPY Package.swift Package.resolved ./
 
-# Cache SwiftPM (Render)
 RUN --mount=type=cache,target=/root/.swiftpm \
     --mount=type=cache,target=/root/.build \
     swift package resolve
 
-# Copia sorgenti, risorse e test
+# Sorgenti
 COPY Sources ./Sources
 COPY Resources ./Resources
 COPY Tests ./Tests
 
-# Build release (❌ niente static-swift-stdlib)
+# Build release
 RUN --mount=type=cache,target=/root/.swiftpm \
     --mount=type=cache,target=/root/.build \
     swift build -c release --product QRCodeApp
 
 # ================================
-# Runtime image
+# Runtime image (⚠️ SEMPRE SWIFT)
 # ================================
-FROM ubuntu:24.04
+FROM swift:6.1-noble
 
 WORKDIR /app
-
-# Dipendenze runtime minime
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libssl3 \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copia binario
 COPY --from=build /app/.build/release/QRCodeApp ./QRCodeApp
 
-# 🔥 COPIA ESPLICITA DELLE RISORSE (VIEWS LEAF)
+# Copia Resources (Leaf!)
 COPY --from=build /app/Resources ./Resources
 
-# Render fornisce PORT
+# Render usa PORT
 ENV PORT=8080
-
 EXPOSE 8080
 
 CMD ["./QRCodeApp"]
