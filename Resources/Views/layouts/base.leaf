@@ -12,9 +12,7 @@
                                             
     </head>
     <body>
-        <script>
-          lucide.createIcons();
-        </script>
+
         #extend("components/navbar")
         
         #import("body")
