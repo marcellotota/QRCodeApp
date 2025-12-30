@@ -43,6 +43,7 @@ let package = Package(
                 .target(name: "QRCodeApp"),
                 .product(name: "VaporTesting", package: "vapor"),
             ],
+            path: "Tests/QRCodeAppTests",
             swiftSettings: swiftSettings
         )
     ]
