@@ -5,6 +5,7 @@
 //  Created by Tota Marcello on 22/12/25.
 //
 
+/*
 import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
@@ -25,3 +26,4 @@ func pngData(from cgImage: CGImage) -> Data? {
 
     return data as Data
 }
+*/
