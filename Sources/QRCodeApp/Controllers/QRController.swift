@@ -13,25 +13,23 @@ import QRCodeGenerator
 struct QRController: RouteCollection {
 
     func boot(routes: any RoutesBuilder) throws {
-        let qr = routes.grouped("qr")
+           let qr = routes.grouped("qr")
 
-        // 📄 LISTA QR
-        qr.get(use: list)
+           // 📄 LISTA (IMPORTANTE)
+           qr.get("", use: list)
 
-        // ➕ CREAZIONE
-        qr.get("new", use: showForm)
-        qr.get("createLeaf", use: createLeaf)
+           // ➕ CREAZIONE
+           qr.get("new", use: showForm)
+           qr.get("createLeaf", use: createLeaf)
 
-        // ✏️ MODIFICA
-        qr.get(":id", "edit", use: editForm)
-        qr.post(":id", "edit", use: update)
+           // ✏️ MODIFICA
+           qr.get(":id", "edit", use: editForm)
+           qr.post(":id", "edit", use: update)
 
-        // 🚫 CANCELLA
-        qr.post(":id", "delete", use: delete)
+           // 🚫 CANCELLA
+           qr.post(":id", "delete", use: delete)
 
-        // 🔁 REDIRECT DINAMICO
-        qr.get(":id", use: redirect)
-    }
+       }
 
     // MARK: - Helper URL pubblico (Render-safe)
     private func publicBaseURL(_ req: Request) -> String {
