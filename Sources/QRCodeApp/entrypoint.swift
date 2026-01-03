@@ -20,6 +20,7 @@ enum Entrypoint {
         
         do {
             try await configure(app)
+            try await app.autoMigrate()
             try await app.execute()
         } catch {
             app.logger.report(error: error)
