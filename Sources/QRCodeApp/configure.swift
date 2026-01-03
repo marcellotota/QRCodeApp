@@ -70,8 +70,8 @@ public func configure(_ app: Application) async throws {
     app.databases.use(.postgres(configuration: postgresConfig), as: .psql)
     
     // DEBUG
-    app.logger.logLevel = .debug
-    app.databases.middleware.use(RouteLoggingMiddleware() as! (any AnyModelMiddleware))
+    //app.logger.logLevel = .debug
+    //app.databases.middleware.use(RouteLoggingMiddleware() as! (any AnyModelMiddleware))
 
     
     // ================================
