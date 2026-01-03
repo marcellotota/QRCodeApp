@@ -1,0 +1,35 @@
+#extend("layouts/base"):
+#export("body"):
+<section class="section">
+    <div class="container">
+        <h1 class="title">
+            <i class="fa-solid fa-chart-line"></i> #(title)
+        </h1>
+
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>QR ID</th>
+                    <th>IP</th>
+                    <th>User Agent</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                #for(scan in scans):
+                <tr>
+                    <td>#(scan.id)</td>
+                    <td>#(scan.qrId)</td>
+                    <td>#(scan.ipAddress)</td>
+                    <td>#(scan.userAgent)</td>
+                    <td>#(scan.createdAt)</td>
+                </tr>
+                #endfor
+            </tbody>
+        </table>
+    </div>
+</section>
+#endexport
+#endextend
+

@@ -31,14 +31,25 @@ struct QRController: RouteCollection {
 
         // 🔁 REDIRECT DINAMICO
         qr.get(":id", use: redirect)
+        
+        // 📊 LISTA SCANSIONI
+        qr.get("scans", use: listScans)
     }
 
     // MARK: - Helper URL pubblico (Render-safe)
     private func publicBaseURL(_ req: Request) -> String {
-        let scheme = req.headers.first(name: .xForwardedProto) ?? "https"
+        let scheme: String
+
+        if let forwarded = req.headers.first(name: .xForwardedProto) {
+            scheme = forwarded
+        } else {
+            scheme = req.application.environment == .production ? "https" : "http"
+        }
+
         let host = req.headers.first(name: .host) ?? "localhost"
         return "\(scheme)://\(host)"
     }
+
 
     // MARK: - LISTA QR
     func list(req: Request) async throws -> View {
@@ -173,6 +184,39 @@ struct QRController: RouteCollection {
 
         return try await req.view.render("qrlist", QRListContext(title: "QR Codes", qrs: leafQrs, errorMessage: nil))
     }
+    
+    // MARK: - LISTA SCANSIONI
+    func listScans(req: Request) async throws -> View {
+        let scans = try await Scan.query(on: req.db)
+            .with(\.$qrCode)
+            .sort(\.$createdAt, .descending)
+            .all()
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "it_IT")
+
+
+        let context = ScanListContext(
+            title: "Scansioni QR Codes",
+            scans: scans.map { scan in
+                ScanLeaf(
+                    id: scan.id!.uuidString,
+                    qrId: scan.qrCode.targetURL,
+                    ipAddress: scan.ipAddress,
+                    userAgent: scan.userAgent,
+                    createdAt: scan.createdAt.map { formatter.string(from: $0) } ?? "—"
+                )
+            }
+
+        )
+
+        return try await req.view.render("scans", context)
+    }
+
+
+
 }
 
 

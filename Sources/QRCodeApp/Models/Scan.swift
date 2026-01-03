@@ -24,6 +24,9 @@ final class Scan: Model, Content {
     @Field(key: "user_agent")
     var userAgent: String
 
+    @Timestamp(key: "created_at", on: .create)
+    var createdAt: Date?  // <- aggiunto
+
     init() { }
 
     init(id: UUID? = nil, qrCodeID: UUID, ipAddress: String, userAgent: String) {
@@ -33,6 +36,5 @@ final class Scan: Model, Content {
         self.userAgent = userAgent
     }
 }
-
 
 extension Scan: @unchecked Sendable {}
