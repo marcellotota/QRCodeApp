@@ -53,16 +53,25 @@ struct QRController: RouteCollection {
 
     // MARK: - LISTA QR
     func list(req: Request) async throws -> View {
+
         do {
+            // Recupero QR ordinati per data (se presente)
             let qrs = try await QRCode.query(on: req.db)
-                .sort(\.$createdAt, .descending)
+                //.sort(\.$createdAt, .descending)
                 .all()
 
             let baseURL = publicBaseURL(req)
 
-            let leafQrs: [QRLeaf] = qrs.map { qr in
-                let dynamicURL = "\(baseURL)/qr/\(qr.id!.uuidString)"
-                let svg: String
+            let leafQrs: [QRLeaf] = qrs.compactMap { qr in
+                // Evita crash se l'id è nil
+                guard let id = qr.id else {
+                    req.logger.error("❌ QRCode senza ID trovato nel database")
+                    return nil
+                }
+
+                let dynamicURL = "\(baseURL)/qr/\(id.uuidString)"
+
+                var svg = ""
                 do {
                     let qrCode = try QRCodeGenerator.QRCode.encode(
                         text: dynamicURL,
@@ -70,12 +79,11 @@ struct QRController: RouteCollection {
                     )
                     svg = qrCode.toSVGString(border: 4)
                 } catch {
-                    req.logger.error("❌ QR generation failed: \(error)")
-                    svg = ""
+                    req.logger.error("❌ QR generation failed: \(String(reflecting: error))")
                 }
 
                 return QRLeaf(
-                    id: qr.id!.uuidString,
+                    id: id.uuidString,
                     targetURL: qr.targetURL,
                     dynamicURL: dynamicURL,
                     qrBase64: Data(svg.utf8).base64EncodedString(),
@@ -92,10 +100,12 @@ struct QRController: RouteCollection {
             return try await req.view.render("qrlist", context)
 
         } catch {
-            req.logger.error("❌ Error fetching QR codes: \(error)")
-            throw Abort(.internalServerError, reason: "Errore caricamento QR Codes")
+            // 🔥 MOSTRA l’errore reale nei log (fondamentale)
+            req.logger.error("❌ Error fetching QR codes: \(String(reflecting: error))")
+            throw error
         }
     }
+
 
     // MARK: - FORM CREAZIONE
     func showForm(req: Request) async throws -> View {
