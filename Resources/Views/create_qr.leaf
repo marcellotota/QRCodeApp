@@ -7,7 +7,7 @@
                     Crea un nuovo QR Code
                 </h1>
 
-                <form action="/qr/createLeaf" method="GET">
+                <form action="/qr/createLeaf" method="POST">
                     <div class="field">
                         <label class="label" for="url">URL da codificare</label>
                         <div class="control">

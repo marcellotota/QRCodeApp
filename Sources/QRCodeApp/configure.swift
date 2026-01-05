@@ -29,45 +29,53 @@ public func configure(_ app: Application) async throws {
         app.http.server.configuration.port = 8095
     }
     
-    // ================================
-        // DATABASE CONFIG
-        // ================================
-        let dbHost = Environment.get("DATABASE_HOST") ?? "localhost"
-        let dbPort = Environment.get("DATABASE_PORT").flatMap(Int.init) ?? 5432
-        let dbUser = Environment.get("DATABASE_USERNAME") ?? "vapor_username"
-        let dbPassword = Environment.get("DATABASE_PASSWORD") ?? "vapor_password"
-        let dbName = Environment.get("DATABASE_NAME") ?? "vapor_database"
+    
+    print("SUPABASE_URL:", Environment.get("SUPABASE_URL") ?? "non impostato")
+    print("SUPABASE_API_KEY:", Environment.get("SUPABASE_API_KEY") != nil ? "<ok>" : "non impostato")
+
+    
+    // QUESTA PARTE COMMENTATA SERVIVA CON FLUENT PER DISTINGURE DB LOCALE DA DB PRODUZIONE
+    
+//    // ================================
+//        // DATABASE CONFIG
+//        // ================================
+//        let dbHost = Environment.get("DATABASE_HOST") ?? "localhost"
+//        let dbPort = Environment.get("DATABASE_PORT").flatMap(Int.init) ?? 5432
+//        let dbUser = Environment.get("DATABASE_USERNAME") ?? "vapor_username"
+//        let dbPassword = Environment.get("DATABASE_PASSWORD") ?? "vapor_password"
+//        let dbName = Environment.get("DATABASE_NAME") ?? "vapor_database"
+    
         
-        let postgresConfig: SQLPostgresConfiguration
+        //let postgresConfig: SQLPostgresConfiguration
         
-        if app.environment == .production {
-            var nioTLS = TLSConfiguration.makeClientConfiguration()
-            // Render + Supabase: fondamentale disabilitare la verifica per i certificati self-signed
-            nioTLS.certificateVerification = .none
-            
-            let sslContext = try NIOSSLContext(configuration: nioTLS)
-            
-            // Lasciamo che Swift inferisca il tipo di 'tls:' direttamente qui
-            postgresConfig = SQLPostgresConfiguration(
-                hostname: dbHost,
-                port: dbPort,
-                username: dbUser,
-                password: dbPassword,
-                database: dbName,
-                tls: .require(sslContext) // Qui Swift sa esattamente cosa deve essere
-            )
-        } else {
-            postgresConfig = SQLPostgresConfiguration(
-                hostname: dbHost,
-                port: dbPort,
-                username: dbUser,
-                password: dbPassword,
-                database: dbName,
-                tls: .disable
-            )
-        }
+//        if app.environment == .production {
+//            var nioTLS = TLSConfiguration.makeClientConfiguration()
+//            // Render + Supabase: fondamentale disabilitare la verifica per i certificati self-signed
+//            nioTLS.certificateVerification = .none
+//            
+//            let sslContext = try NIOSSLContext(configuration: nioTLS)
+//            
+//            // Lasciamo che Swift inferisca il tipo di 'tls:' direttamente qui
+//            postgresConfig = SQLPostgresConfiguration(
+//                hostname: dbHost,
+//                port: dbPort,
+//                username: dbUser,
+//                password: dbPassword,
+//                database: dbName,
+//                tls: .require(sslContext) // Qui Swift sa esattamente cosa deve essere
+//            )
+//        } else {
+//            postgresConfig = SQLPostgresConfiguration(
+//                hostname: dbHost,
+//                port: dbPort,
+//                username: dbUser,
+//                password: dbPassword,
+//                database: dbName,
+//                tls: .disable
+//            )
+//        }
         
-    app.databases.use(.postgres(configuration: postgresConfig), as: .psql)
+    //app.databases.use(.postgres(configuration: postgresConfig), as: .psql)
     
     // DEBUG
     //app.logger.logLevel = .debug
@@ -75,10 +83,10 @@ public func configure(_ app: Application) async throws {
 
     
     // ================================
-    // MIGRAZIONI
+    // MIGRAZIONI X FLUENT SOSTITUITO DA REST
     // ================================
-    app.migrations.add(CreateQRCode())
-    app.migrations.add(CreateScan())
+    //app.migrations.add(CreateQRCode())
+    //app.migrations.add(CreateScan())
     
     // ================================
     // LEAF

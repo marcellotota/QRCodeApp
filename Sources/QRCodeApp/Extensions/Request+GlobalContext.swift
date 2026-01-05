@@ -27,3 +27,20 @@ extension Request {
     }
 }
 
+extension Request {
+    var supabaseURL: String { Environment.get("SUPABASE_URL") ?? "" }
+    var supabaseKey: String { Environment.get("SUPABASE_API_KEY") ?? "" }
+
+    func supabaseRequest(path: String, method: HTTPMethod = .GET, body: [String: Any]? = nil) async throws -> ClientResponse {
+        let url = URI(string: "\(supabaseURL)/rest/v1/\(path)")
+        return try await self.client.send(method, to: url) { req in
+            req.headers.add(name: "apikey", value: supabaseKey)
+            req.headers.add(name: "Authorization", value: "Bearer \(supabaseKey)")
+            req.headers.add(name: "Content-Type", value: "application/json")
+            if let body = body {
+                // Serializza in Data JSON
+                req.body = try .init(data: JSONSerialization.data(withJSONObject: body))
+            }
+        }
+    }
+}
