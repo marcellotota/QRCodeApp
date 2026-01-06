@@ -2,47 +2,98 @@
 #export("body"):
 <section class="section">
     <div class="container">
+
         <h1 class="title">
-            <i class="fa-solid fa-qrcode"></i> #(title)
+            <i class="fa-solid fa-qrcode"></i>
+            #(title)
         </h1>
 
-        <table class="table is-fullwidth is-striped">
+        #if(qrs.isEmpty):
+            <div class="notification is-warning has-text-centered">
+                Nessun QR Code presente
+            </div>
+        #else:
+
+        <table class="table is-fullwidth is-striped is-hoverable">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>QR Code</th>
                     <th>Target URL</th>
                     <th>Dynamic URL</th>
-                    <th>Azioni</th>
+                    <th class="has-text-centered">Azioni</th>
                 </tr>
             </thead>
+
             <tbody>
                 #for(qr in qrs):
                 <tr>
-                    <td>#(qr.id)</td>
+                    <td style="font-size: 0.8rem;">
+                        #(qr.id)
+                    </td>
+
                     <td>
                         #if(qr.hasQR):
-                            <img src="data:image/svg+xml;base64,#(qr.qrBase64)" alt="QR Code" style="max-width: 150px;">
+                            <img
+                                src="data:image/svg+xml;base64,#(qr.qrBase64)"
+                                alt="QR Code"
+                                style="max-width: 140px;">
+                        #else:
+                            <span class="has-text-grey">—</span>
                         #endif
                     </td>
 
-                    <td>#(qr.targetURL)</td>
-                    <td>#(qr.dynamicURL)</td>
-                    <td>
-                        <a href="/qr/#(qr.id)/edit" title="Modifica">
+                    <td style="word-break: break-all;">
+                        #(qr.targetURL)
+                    </td>
+
+                    <td style="word-break: break-all;">
+                        <a href="#(qr.dynamicURL)" target="_blank">
+                            #(qr.dynamicURL)
+                        </a>
+                    </td>
+
+                    <td class="has-text-centered">
+
+                        <!-- ✏️ MODIFICA -->
+                        <a href="/qr/#(qr.id)/edit"
+                           title="Modifica QR Code">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
+
                         &nbsp;&nbsp;
-                        <form action="/qr/#(qr.id)/delete" method="POST" style="display:inline;">
-                            <button type="submit" class="button is-small" style="background:none; border:none; padding:0;" title="Elimina">
+
+                        <!-- ⬇️ DOWNLOAD SVG -->
+                        <a href="/qr/#(qr.id)/download"
+                           title="Scarica QR Code (SVG)">
+                            <i class="fa-solid fa-download has-text-info"></i>
+                        </a>
+
+                        &nbsp;&nbsp;
+
+                        <!-- 🗑️ ELIMINA -->
+                        <form action="/qr/#(qr.id)/delete"
+                              method="POST"
+                              style="display:inline;"
+                              onsubmit="return confirm('Sei sicuro di voler eliminare questo QR Code?');">
+
+                            <button type="submit"
+                                    class="button is-small"
+                                    style="background:none; border:none; padding:0;"
+                                    title="Elimina QR Code">
+
                                 <i class="fa-solid fa-trash has-text-danger"></i>
                             </button>
                         </form>
+
                     </td>
                 </tr>
                 #endfor
             </tbody>
         </table>
+
+        #endif
+
     </div>
 </section>
 #endexport

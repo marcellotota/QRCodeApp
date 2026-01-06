@@ -32,6 +32,13 @@ struct QRController: RouteCollection {
         
         // 📊 LISTA SCANSIONI
         qr.get("scans", use: listScans)
+        
+        // 📊 SCANSIONI PER QR
+        qr.get(":id", "scans", use: scansByQR)
+        
+        // ⬇️ DOWNLOAD QR
+        qr.get(":id", "download", use: download)
+
     }
 
     // MARK: - Helper URL pubblico (Render-safe)
@@ -211,45 +218,147 @@ struct QRController: RouteCollection {
 
         return try await list(req: req)
     }
+    
+    // MARK: - DOWNLOAD SVG
+    func download(req: Request) async throws -> Response {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest)
+        }
+
+        // Recupera QR
+        let response = try await supabaseRequest(req, path: "qrcodes?id=eq.\(id.uuidString)")
+        guard response.status == .ok else {
+            throw Abort(.notFound)
+        }
+
+        struct QRCodeResponse: Decodable {
+            let id: UUID
+        }
+
+        guard let qr = try response.content.decode([QRCodeResponse].self).first else {
+            throw Abort(.notFound)
+        }
+
+        // URL dinamico
+        let dynamicURL = "\(publicBaseURL(req))/qr/\(qr.id.uuidString)"
+
+        // Genera SVG
+        let qrCode = try QRCodeGenerator.QRCode.encode(
+            text: dynamicURL,
+            ecl: .medium
+        )
+        let svg = qrCode.toSVGString(border: 4)
+
+        var headers = HTTPHeaders()
+        headers.add(name: .contentType, value: "image/svg+xml")
+        headers.add(
+            name: .contentDisposition,
+            value: "attachment; filename=\"qrcode-\(qr.id.uuidString).svg\""
+        )
+
+        return Response(
+            status: .ok,
+            headers: headers,
+            body: .init(string: svg)
+        )
+    }
+
 
     // MARK: - LISTA SCANSIONI
     func listScans(req: Request) async throws -> View {
-        let response = try await supabaseRequest(req, path: "scans?select=*,qr_code(*)&order=created_at.desc")
-        guard response.status == .ok else { throw Abort(.internalServerError) }
+        let response = try await supabaseRequest(
+            req,
+            path: "rpc/get_qr_scan_stats"
+        )
+
+        guard response.status == .ok else {
+            throw Abort(.internalServerError)
+        }
+
+        struct ScanStatResponse: Decodable {
+            let qr_code_id: UUID
+            let target_url: String
+            let total_scans: Int
+        }
+
+        let stats = try response.content.decode([ScanStatResponse].self)
+
+        let scans = stats.map {
+            ScanLeaf(
+                id: $0.qr_code_id.uuidString,
+                qrId: $0.target_url,
+                ipAddress: "—",
+                userAgent: "—",
+                createdAt: "\($0.total_scans)"
+            )
+        }
+
+        let context = ScanListContext(
+            title: "Scansioni per QR Code",
+            scans: scans
+        )
+
+        return try await req.view.render("scans", context)
+    }
+    
+    // MARK: - SCANSIONI PER SINGOLO QR
+    func scansByQR(req: Request) async throws -> View {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest)
+        }
+
+        let response = try await supabaseRequest(
+            req,
+            path: "scans?qr_code_id=eq.\(id.uuidString)&order=created_at.desc"
+        )
+
+        guard response.status == .ok else {
+            throw Abort(.internalServerError)
+        }
 
         struct ScanResponse: Decodable {
             let id: UUID
             let ip_address: String
             let user_agent: String
-            let created_at: String?
-            let qr_code: QRCodeNested
-        }
-        struct QRCodeNested: Decodable {
-            let target_url: String
+            let created_at: String
         }
 
-        let scans = try response.content.decode([ScanResponse].self)
+        let scansResponse = try response.content.decode([ScanResponse].self)
 
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        formatter.locale = Locale(identifier: "it_IT")
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [
+            .withInternetDateTime,
+            .withFractionalSeconds
+        ]
+
+        let displayFormatter = DateFormatter()
+        displayFormatter.locale = Locale(identifier: "it_IT")
+        displayFormatter.dateStyle = .medium
+        displayFormatter.timeStyle = .short
+
+        let scans: [ScanLeaf] = scansResponse.map { scan in
+            let date = isoFormatter.date(from: scan.created_at)
+            let dateString = date.map { displayFormatter.string(from: $0) } ?? "—"
+
+            return ScanLeaf(
+                id: scan.id.uuidString,
+                qrId: id.uuidString,
+                ipAddress: scan.ip_address,
+                userAgent: scan.user_agent,
+                createdAt: dateString
+            )
+        }
 
         let context = ScanListContext(
-            title: "Scansioni QR Codes",
-            scans: scans.map { scan in
-                ScanLeaf(
-                    id: scan.id.uuidString,
-                    qrId: scan.qr_code.target_url,
-                    ipAddress: scan.ip_address,
-                    userAgent: scan.user_agent,
-                    createdAt: scan.created_at.flatMap { formatter.date(from: $0) }.map { formatter.string(from: $0) } ?? "—"
-                )
-            }
+            title: "Scansioni QR",
+            scans: scans
         )
 
-        return try await req.view.render("scans", context)
+        return try await req.view.render("scans_detail", context)
     }
+
+
+
 }
 
 // MARK: - Leaf Contexts

@@ -2,34 +2,58 @@
 #export("body"):
 <section class="section">
     <div class="container">
+
         <h1 class="title">
-            <i class="fa-solid fa-chart-line"></i> #(title)
+            <i class="fa-solid fa-chart-line"></i>
+            #(title)
         </h1>
 
-        <table class="table is-fullwidth is-striped">
+        #if(scans.isEmpty):
+            <div class="notification is-warning has-text-centered">
+                Nessuna scansione registrata
+            </div>
+        #else:
+
+        <table class="table is-fullwidth is-striped is-hoverable">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>QR ID</th>
-                    <th>IP</th>
-                    <th>User Agent</th>
-                    <th>Data</th>
+                    <th>QR Code ID</th>
+                    <th>Target URL</th>
+                    <th class="has-text-centered">Scansioni Totali</th>
                 </tr>
             </thead>
+
             <tbody>
                 #for(scan in scans):
-                <tr>
-                    <td>#(scan.id)</td>
-                    <td>#(scan.qrId)</td>
-                    <td>#(scan.ipAddress)</td>
-                    <td>#(scan.userAgent)</td>
-                    <td>#(scan.createdAt)</td>
+                <tr
+                    style="cursor: pointer;"
+                    onclick="window.location='/qr/#(scan.id)/scans'">
+
+                    <!-- QR ID -->
+                    <td style="font-size: 0.8rem;">
+                        #(scan.id)
+                    </td>
+
+                    <!-- Target URL -->
+                    <td style="word-break: break-all;">
+                        #(scan.qrId)
+                    </td>
+
+                    <!-- Totale scans -->
+                    <td class="has-text-centered">
+                        <span class="tag is-info is-medium">
+                            #(scan.createdAt)
+                        </span>
+                    </td>
+
                 </tr>
                 #endfor
             </tbody>
         </table>
+
+        #endif
+
     </div>
 </section>
 #endexport
 #endextend
-
